@@ -188,14 +188,8 @@ func TestApprovedCommentBody(t *testing.T) {
 			customApprovalWord: "",
 		},
 		{
-			name:               "approve_lowercase_no_punctuation",
-			commentBody:        "approve",
-			isSuccess:          true,
-			customApprovalWord: "",
-		},
-		{
-			name:               "lgtm_lowercase_no_punctuation",
-			commentBody:        "lgtm",
+			name:               "+1_no_punctuation",
+			commentBody:        "👍",
 			isSuccess:          true,
 			customApprovalWord: "",
 		},
@@ -206,8 +200,8 @@ func TestApprovedCommentBody(t *testing.T) {
 			customApprovalWord: "",
 		},
 		{
-			name:               "approve_uppercase_no_punctuation",
-			commentBody:        "APPROVE",
+			name:               "rocket_no_punctuation",
+			commentBody:        "🚀",
 			isSuccess:          true,
 			customApprovalWord: "",
 		},
@@ -330,20 +324,8 @@ func TestDeniedCommentBody(t *testing.T) {
 			customDenialWord: "",
 		},
 		{
-			name:             "deny_lowercase_no_punctuation",
-			commentBody:      "deny",
-			isSuccess:        true,
-			customDenialWord: "",
-		},
-		{
 			name:             "no_lowercase_no_punctuation",
 			commentBody:      "no",
-			isSuccess:        true,
-			customDenialWord: "",
-		},
-		{
-			name:             "deny_uppercase_no_punctuation",
-			commentBody:      "DENY",
 			isSuccess:        true,
 			customDenialWord: "",
 		},

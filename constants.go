@@ -27,7 +27,7 @@ var (
 	additionalApprovedWords = readAdditionalWords(envVarAdditionalApprovedWords)
 	additionalDeniedWords   = readAdditionalWords(envVarAdditionalDeniedWords)
 
-	approvedWords = append([]string{"approved", "yes", "👍", "🚀", "🚢"}, additionalApprovedWords...)
+	approvedWords = append([]string{"approved", "yes", "👍", "✅", "🚀", "🚢"}, additionalApprovedWords...)
 	deniedWords   = append([]string{"denied", "no", "👎", "❌", "𝕏", "🚫"}, additionalDeniedWords...)
 )
 

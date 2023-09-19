@@ -28,3 +28,41 @@ jobs:
         run: make test
       - name: Lint
         run: make lint
+  
+  deploy:
+    name: Deploy
+    if: github.ref == 'refs/heads/main'
+    needs: ci
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+      
+      - name: Extract version from package.json
+        uses: sergeysova/jq-action@v2
+        id: version
+        with:
+          cmd: 'jq .version package.json -r'
+
+      - name: Build
+        run: make build
+        env:
+          VERSION: ${{ steps.version.outputs.value}}
+
+      - name: Deploy
+        run: |
+          make deploy
+
+          git config --global user.name 'Github Actions'
+          git config --global user.email 'system@fennelmarkets.com'
+          
+          git tag -d v1 && git push --delete origin v1
+          git tag ${VERSION} && git tag v1 && git push origin --tags
+        env:
+          VERSION: ${{ steps.version.outputs.value}}
