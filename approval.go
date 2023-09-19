@@ -19,11 +19,12 @@ type approvalEnvironment struct {
 	approvalIssueNumber int
 	issueTitle          string
 	issueBody           string
+	issueLabels         []string
 	issueApprovers      []string
 	minimumApprovals    int
 }
 
-func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner string, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string) (*approvalEnvironment, error) {
+func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner string, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string, issueLabels []string) (*approvalEnvironment, error) {
 	repoOwnerAndName := strings.Split(repoFullName, "/")
 	if len(repoOwnerAndName) != 2 {
 		return nil, fmt.Errorf("repo owner and name in unexpected format: %s", repoFullName)
@@ -40,6 +41,7 @@ func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner strin
 		minimumApprovals: minimumApprovals,
 		issueTitle:       issueTitle,
 		issueBody:        issueBody,
+		issueLabels:      issueLabels,
 	}, nil
 }
 
@@ -84,6 +86,7 @@ To cancel the workflow, respond with one of the following:
 		Title:     &issueTitle,
 		Body:      &issueBody,
 		Assignees: &a.issueApprovers,
+		Labels:    &a.issueLabels,
 	})
 	if err != nil {
 		return err
