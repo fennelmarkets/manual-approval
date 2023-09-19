@@ -57,10 +57,10 @@ func (a *approvalEnvironment) createApprovalIssue(ctx context.Context) error {
 	issueBody := fmt.Sprintf(`Workflow ([#%d](%s)) is pending manual review.
 
 To continue the workflow, respond with one of the following:
- > %s
+%s
 
 To cancel the workflow, respond with one of the following:
-> %s`,
+%s`,
 		a.runID,
 		a.runURL(),
 		formatAcceptedWords(approvedWords),
