@@ -48,20 +48,21 @@ func (a approvalEnvironment) runURL() string {
 }
 
 func (a *approvalEnvironment) createApprovalIssue(ctx context.Context) error {
-	issueTitle := fmt.Sprintf("Manual approval required for workflow run %d", a.runID)
+	issueTitle := "Approval required"
 
 	if a.issueTitle != "" {
 		issueTitle = fmt.Sprintf("%s: %s", issueTitle, a.issueTitle)
 	}
 
-	issueBody := fmt.Sprintf(`Workflow is pending manual review.
-URL: %s
+	issueBody := fmt.Sprintf(`Workflow ([#%d](%s)) is pending manual review.
 
-Required approvers: %s
+To continue the workflow, respond with one of the following:
+ > %s
 
-Respond %s to continue workflow or %s to cancel.`,
+To cancel the workflow, respond with one of the following:
+> %s`,
+		a.runID,
 		a.runURL(),
-		a.issueApprovers,
 		formatAcceptedWords(approvedWords),
 		formatAcceptedWords(deniedWords),
 	)
@@ -181,8 +182,8 @@ func formatAcceptedWords(words []string) string {
 	var quotedWords []string
 
 	for _, word := range words {
-		quotedWords = append(quotedWords, fmt.Sprintf("\"%s\"", word))
+		quotedWords = append(quotedWords, fmt.Sprintf("* %s", word))
 	}
 
-	return strings.Join(quotedWords, ", ")
+	return strings.Join(quotedWords, "\n")
 }

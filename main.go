@@ -51,7 +51,7 @@ func newCommentLoopChannel(ctx context.Context, apprv *approvalEnvironment, clie
 			switch approved {
 			case approvalStatusApproved:
 				newState := "closed"
-				closeComment := "All approvers have approved, continuing workflow and closing this issue."
+				closeComment := "Approval has been granted, continuing workflow and closing this issue."
 				_, _, err := client.Issues.CreateComment(ctx, apprv.repoOwner, apprv.repo, apprv.approvalIssueNumber, &github.IssueComment{
 					Body: &closeComment,
 				})
@@ -71,7 +71,7 @@ func newCommentLoopChannel(ctx context.Context, apprv *approvalEnvironment, clie
 				close(channel)
 			case approvalStatusDenied:
 				newState := "closed"
-				closeComment := "Request denied. Closing issue and failing workflow."
+				closeComment := "Approval was denied. Closing issue and failing workflow."
 				_, _, err := client.Issues.CreateComment(ctx, apprv.repoOwner, apprv.repo, apprv.approvalIssueNumber, &github.IssueComment{
 					Body: &closeComment,
 				})
