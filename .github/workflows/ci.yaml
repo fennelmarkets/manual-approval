@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy
         run: |
-          make deploy
+          make push
 
           git config --global user.name 'Github Actions'
           git config --global user.email 'system@fennelmarkets.com'
