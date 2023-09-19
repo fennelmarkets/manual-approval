@@ -34,8 +34,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: ci
     permissions:
-      packages: write
-      contents: read
+      packages: write # Allow publishing docker container
+      contents: write # Allow tagging releases
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
