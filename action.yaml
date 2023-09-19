@@ -30,4 +30,4 @@ inputs:
     default: ''
 runs:
   using: docker
-  image: docker://ghcr.io/fennelmarkets/manual-approval:1.9.1
+  image: docker://ghcr.io/fennelmarkets/manual-approval:v1.9.1
