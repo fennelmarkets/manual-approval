@@ -6,16 +6,16 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/actions-go/toolkit/core"
+	"github.com/actions-go/toolkit/github"
+	gh "github.com/google/go-github/v43/github"
 )
 
 type approvalEnvironment struct {
-	client              *github.Client
-	repoFullName        string
-	repo                string
-	repoOwner           string
+	client              *gh.Client
+	repo                github.ActionRepo
 	runID               int
-	approvalIssue       *github.Issue
+	approvalIssue       *gh.Issue
 	approvalIssueNumber int
 	issueTitle          string
 	issueBody           string
@@ -24,18 +24,10 @@ type approvalEnvironment struct {
 	minimumApprovals    int
 }
 
-func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner string, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string, issueLabels []string) (*approvalEnvironment, error) {
-	repoOwnerAndName := strings.Split(repoFullName, "/")
-	if len(repoOwnerAndName) != 2 {
-		return nil, fmt.Errorf("repo owner and name in unexpected format: %s", repoFullName)
-	}
-	repo := repoOwnerAndName[1]
-
+func newApprovalEnvironment(client *gh.Client, repo github.ActionRepo, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string, issueLabels []string) (*approvalEnvironment, error) {
 	return &approvalEnvironment{
 		client:           client,
-		repoFullName:     repoFullName,
 		repo:             repo,
-		repoOwner:        repoOwner,
 		runID:            runID,
 		issueApprovers:   approvers,
 		minimumApprovals: minimumApprovals,
@@ -46,7 +38,7 @@ func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner strin
 }
 
 func (a approvalEnvironment) runURL() string {
-	return fmt.Sprintf("%s%s/actions/runs/%d", a.client.BaseURL.String(), a.repoFullName, a.runID)
+	return fmt.Sprintf("%s%s/%s/actions/runs/%d", a.client.BaseURL.String(), a.repo.Owner, a.repo.Repo, a.runID)
 }
 
 func (a *approvalEnvironment) createApprovalIssue(ctx context.Context) error {
@@ -74,15 +66,15 @@ To cancel the workflow, respond with one of the following:
 	}
 
 	var err error
-	fmt.Printf(
-		"Creating issue in repo %s/%s with the following content:\nTitle: %s\nApprovers: %s\nBody:\n%s\n",
-		a.repoOwner,
-		a.repo,
+	core.Infof(
+		"Creating issue in repo %s/%s with the following content:\nTitle: %s\nApprovers: %s\nBody:\n%s",
+		a.repo.Owner,
+		a.repo.Repo,
 		issueTitle,
 		a.issueApprovers,
 		issueBody,
 	)
-	a.approvalIssue, _, err = a.client.Issues.Create(ctx, a.repoOwner, a.repo, &github.IssueRequest{
+	a.approvalIssue, _, err = a.client.Issues.Create(ctx, a.repo.Owner, a.repo.Repo, &gh.IssueRequest{
 		Title:     &issueTitle,
 		Body:      &issueBody,
 		Assignees: &a.issueApprovers,
@@ -93,11 +85,11 @@ To cancel the workflow, respond with one of the following:
 	}
 	a.approvalIssueNumber = a.approvalIssue.GetNumber()
 
-	fmt.Printf("Issue created: %s\n", a.approvalIssue.GetURL())
+	core.Debugf("Issue created: %s\n", a.approvalIssue.GetURL())
 	return nil
 }
 
-func approvalFromComments(comments []*github.IssueComment, approvers []string, minimumApprovals int) (approvalStatus, error) {
+func approvalFromComments(comments []*gh.IssueComment, approvers []string, minimumApprovals int) (approvalStatus, error) {
 	remainingApprovers := make([]string, len(approvers))
 	copy(remainingApprovers, approvers)
 
@@ -151,7 +143,7 @@ func isApproved(commentBody string) (bool, error) {
 	for _, approvedWord := range approvedWords {
 		re, err := regexp.Compile(fmt.Sprintf("(?i)^%s[.!]*\n*\\s*$", approvedWord))
 		if err != nil {
-			fmt.Printf("Error parsing. %v", err)
+			core.SetFailedf("Error parsing. %v", err)
 			return false, err
 		}
 
@@ -169,7 +161,7 @@ func isDenied(commentBody string) (bool, error) {
 	for _, deniedWord := range deniedWords {
 		re, err := regexp.Compile(fmt.Sprintf("(?i)^%s[.!]*\n*\\s*$", deniedWord))
 		if err != nil {
-			fmt.Printf("Error parsing. %v", err)
+			core.SetFailedf("Error parsing. %v", err)
 			return false, err
 		}
 		matched := re.MatchString(commentBody)

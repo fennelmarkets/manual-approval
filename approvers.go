@@ -3,23 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/actions-go/toolkit/core"
+	"github.com/actions-go/toolkit/github"
+	gh "github.com/google/go-github/v43/github"
 )
 
-func retrieveApprovers(client *github.Client, repoOwner string) ([]string, error) {
-	workflowInitiator := os.Getenv(envVarWorkflowInitiator)
-	shouldExcludeWorkflowInitiatorRaw := os.Getenv(envVarExcludeWorkflowInitiatorAsApprover)
-	shouldExcludeWorkflowInitiator, parseBoolErr := strconv.ParseBool(shouldExcludeWorkflowInitiatorRaw)
-	if parseBoolErr != nil {
-		return nil, fmt.Errorf("error parsing exclude-workflow-initiator-as-approver flag: %w", parseBoolErr)
-	}
+func retrieveApprovers(client *gh.Client, repoOwner string) ([]string, error) {
+	workflowInitiator := github.ParseActionEnv().Actor
+	shouldExcludeWorkflowInitiator := core.GetBoolInput(inputExcludeWorkflowInitiatorAsApprover)
 
 	approvers := []string{}
-	requiredApproversRaw := os.Getenv(envVarApprovers)
+	requiredApproversRaw := core.GetInputOrDefault(inputApprovers, "")
 	requiredApprovers := strings.Split(requiredApproversRaw, ",")
 
 	for i := range requiredApprovers {
@@ -31,7 +28,7 @@ func retrieveApprovers(client *github.Client, repoOwner string) ([]string, error
 		if expandedUsers != nil {
 			approvers = append(approvers, expandedUsers...)
 		} else if strings.EqualFold(workflowInitiator, approverUser) && shouldExcludeWorkflowInitiator {
-			fmt.Printf("Not adding user '%s' as an approver as they are the workflow initiator\n", approverUser)
+			core.Debugf("Not adding user '%s' as an approver as they are the workflow initiator", approverUser)
 		} else {
 			approvers = append(approvers, approverUser)
 		}
@@ -39,7 +36,7 @@ func retrieveApprovers(client *github.Client, repoOwner string) ([]string, error
 
 	approvers = deduplicateUsers(approvers)
 
-	minimumApprovalsRaw := os.Getenv(envVarMinimumApprovals)
+	minimumApprovalsRaw := core.GetInputOrDefault(inputMinimumApprovals, "")
 	minimumApprovals := len(approvers)
 	var err error
 	if minimumApprovalsRaw != "" {
@@ -56,17 +53,17 @@ func retrieveApprovers(client *github.Client, repoOwner string) ([]string, error
 	return approvers, nil
 }
 
-func expandGroupFromUser(client *github.Client, org, userOrTeam string, workflowInitiator string, shouldExcludeWorkflowInitiator bool) []string {
-	fmt.Printf("Attempting to expand user %s/%s as a group (may not succeed)\n", org, userOrTeam)
+func expandGroupFromUser(client *gh.Client, org, userOrTeam string, workflowInitiator string, shouldExcludeWorkflowInitiator bool) []string {
+	core.Debugf("Attempting to expand user %s/%s as a group (may not succeed)", org, userOrTeam)
 
 	// GitHub replaces periods in the team name with hyphens. If a period is
 	// passed to the request it would result in a 404. So we need to replace
 	// and occurrences with a hyphen.
 	formattedUserOrTeam := strings.ReplaceAll(userOrTeam, ".", "-")
 
-	users, _, err := client.Teams.ListTeamMembersBySlug(context.Background(), org, formattedUserOrTeam, &github.TeamListTeamMembersOptions{})
+	users, _, err := client.Teams.ListTeamMembersBySlug(context.Background(), org, formattedUserOrTeam, &gh.TeamListTeamMembersOptions{})
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		core.SetFailedf("%v", err)
 		return nil
 	}
 
@@ -74,7 +71,7 @@ func expandGroupFromUser(client *github.Client, org, userOrTeam string, workflow
 	for _, user := range users {
 		userName := user.GetLogin()
 		if strings.EqualFold(userName, workflowInitiator) && shouldExcludeWorkflowInitiator {
-			fmt.Printf("Not adding user '%s' from group '%s' as an approver as they are the workflow initiator\n", userName, userOrTeam)
+			core.Debugf("Not adding user '%s' from group '%s' as an approver as they are the workflow initiator", userName, userOrTeam)
 		} else {
 			userNames = append(userNames, userName)
 		}

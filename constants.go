@@ -1,39 +1,39 @@
 package main
 
 import (
-	"os"
 	"strings"
 	"time"
+
+	"github.com/actions-go/toolkit/core"
 )
 
 const (
 	pollingInterval time.Duration = 10 * time.Second
 
-	envVarRepoFullName                       string = "GITHUB_REPOSITORY"
-	envVarRunID                              string = "GITHUB_RUN_ID"
-	envVarRepoOwner                          string = "GITHUB_REPOSITORY_OWNER"
-	envVarWorkflowInitiator                  string = "GITHUB_ACTOR"
-	envVarToken                              string = "INPUT_SECRET"
-	envVarApprovers                          string = "INPUT_APPROVERS"
-	envVarMinimumApprovals                   string = "INPUT_MINIMUM-APPROVALS"
-	envVarIssueTitle                         string = "INPUT_ISSUE-TITLE"
-	envVarIssueBody                          string = "INPUT_ISSUE-BODY"
-	envVarExcludeWorkflowInitiatorAsApprover string = "INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER"
-	envVarAdditionalApprovedWords            string = "INPUT_ADDITIONAL-APPROVED-WORDS"
-	envVarAdditionalDeniedWords              string = "INPUT_ADDITIONAL-DENIED-WORDS"
-	envVarLabels                             string = "INPUT_LABELS"
+	envVarRunID string = "GITHUB_RUN_ID"
+	//
+	inputGithubToken                        string = "INPUT_SECRET"
+	inputApprovers                          string = "approvers"
+	inputMinimumApprovals                   string = "minimum-approvals"
+	inputIssueTitle                         string = "issue-title"
+	inputIssueBody                          string = "issue-body"
+	inputExcludeWorkflowInitiatorAsApprover string = "exclude-workflow-initiator-as-approver"
+	inputAdditionalApprovalWords            string = "additional-approved-words"
+	inputAdditionalDeniedWords              string = "additional-denied-words"
+	inputLabels                             string = "labels"
+	outputDuration                          string = "duration"
 )
 
 var (
-	additionalApprovedWords = readAdditionalWords(envVarAdditionalApprovedWords)
-	additionalDeniedWords   = readAdditionalWords(envVarAdditionalDeniedWords)
+	additionalApprovedWords = readAdditionalWords(inputAdditionalApprovalWords)
+	additionalDeniedWords   = readAdditionalWords(inputAdditionalDeniedWords)
 
 	approvedWords = append([]string{"approved", "yes", "👍", "✅", "🚀", "🚢"}, additionalApprovedWords...)
 	deniedWords   = append([]string{"denied", "no", "👎", "❌", "𝕏", "🚫"}, additionalDeniedWords...)
 )
 
 func readAdditionalWords(envVar string) []string {
-	rawValue := strings.TrimSpace(os.Getenv(envVar))
+	rawValue := strings.TrimSpace(core.GetInputOrDefault(envVar, ""))
 	if len(rawValue) == 0 {
 		// Nothing else to do here.
 		return []string{}

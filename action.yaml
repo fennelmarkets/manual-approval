@@ -8,7 +8,7 @@ inputs:
     description: Required approvers
     required: true
   secret:
-    description: Secret
+    description: The Github PAT to get team members and create/comment/close issues
     required: true
   minimum-approvals:
     description: Minimum number of approvals to progress workflow
@@ -31,6 +31,9 @@ inputs:
   labels:
     description: Comma separated list of labels to add to the issue
     default: ''
+outputs:
+  duration:
+    description: The number of minutes the approval took
 runs:
   using: docker
-  image: docker://ghcr.io/fennelmarkets/manual-approval:v1.9.2
+  image: docker://ghcr.io/fennelmarkets/manual-approval:v1.10.0
