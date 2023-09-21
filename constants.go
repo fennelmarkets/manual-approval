@@ -12,7 +12,7 @@ const (
 
 	envVarRunID string = "GITHUB_RUN_ID"
 	//
-	inputGithubToken                        string = "INPUT_SECRET"
+	inputGithubToken                        string = "secret"
 	inputApprovers                          string = "approvers"
 	inputMinimumApprovals                   string = "minimum-approvals"
 	inputIssueTitle                         string = "issue-title"
